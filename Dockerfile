@@ -5,7 +5,7 @@ FROM quay.io/keycloak/keycloak:23.0.4
 # Copy the contents from the "builder" stage to the current stage
 COPY keycloak.crt /opt/keycloak/conf/keycloak.crt
 COPY keycloak.pem /opt/keycloak/conf/keycloak.pem
-COPY keycloak.keystore /opt/keycloak/conf/keycloak.keystore
+COPY keycloak.keystore.p12 /opt/keycloak/conf/keycloak.keystore.p12
 
 # Configure a database vendor
 ENV KC_DB=postgres
@@ -25,8 +25,9 @@ ENV https_port 8443
 ENTRYPOINT ["/opt/keycloak/bin/kc.sh", "start", \
 "--https-port=${https_port}", \
 "--http-port=${http_port}", \
-"--https-key-store-file=/opt/keycloak/conf/keycloak.keystore", \
+"--https-key-store-file=/opt/keycloak/conf/keycloak.keystore.p12", \
 "--https-key-store-password=keycloak", \
+"--https-key-store-type=PKCS12", \
 "--hostname=mykeycloak", \
 "--hostname-admin=admin.mykeycloak"]
 

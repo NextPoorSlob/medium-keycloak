@@ -3,15 +3,15 @@ Based on a Medium article by Shailendra Jain
 [Keycloak production mode with Docker](https://medium.com/@asynchronouscal/keycloak-production-mode-with-docker-step-by-step-guide-b284927e72c0)
 
 ## Steps
-1. Install Docker
-2. Run Keycloak in Dev Mode
-3. Prepare the Hosts File
-4. Prepare a Self-Signed Certificate
-5. Create the Docker Network
-6. Create The Database Container
-7. Prepare Dockerfile for Keycloak
-8. Generate Keycloak Image
-9. Launch the Secure Keycloak
+1. [Install Docker](#install-docker)
+2. [Run Keycloak in Dev Mode](#run-keycloak-in-dev-mode)
+3. [Prepare the Hosts File](#prepare-the-hosts-file)
+4. [Prepare a Self-Signed Certificate](#prepare-a-self-signed-certificate)
+5. [Create the Docker Network](#create-the-docker-network)
+6. [Create The Database Container](#create-the-database-container)
+7. [Prepare Dockerfile for Keycloak](#prepare-dockerfile-for-keycloak)
+8. [Generate Keycloak Image](#generate-keycloak-image)
+9. [Launch the Secure Keycloak](#launch-the-secure-keycloak)
 
 ## Install Docker
 System dependent.
@@ -36,29 +36,23 @@ C:\Windows\System32\drivers\etc\hosts.
 ```
 
 ## Prepare a Self-Signed Certificate
-Create a self-signed certificate to test the set-up.
+Create a self-signed certificate in a keystore to test the set-up.
 ```shell
 openssl genrsa -out keycloak.key 2048
 
-openssl req -new -x509 -sha256 -key keycloak.key -out keycloak.crt -days 2048
+openssl req -x509 -new -nodes -key keycloak.key \
+    -sha256 -days 1024 -out keycloak.pem
 
-mv keycloak.key keycloak.pem
-
-cat keycloak.crt >> keycloak.pem
-
-sudo keytool -genkeypair -alias localhost \
--keyalg RSA \
--keysize 2048 \
--validity 2048 \
--keystore keycloak.keystore \
--dname "cn=Server Administrator,o=Angry Squirrel Software,c=US" \
--keypass keycloak \
--storepass keycloak
+ openssl pkcs12 -export \
+    -name keycloak \
+    -in keycloak.pem \
+    -inkey keycloak.key \
+    -out keycloak.keystore.p12
 ```
 
 You can list the resulting  keystore with this line:
 ```shell
-keytool -list -keystore keycloak.keystore -storepass keycloak -storetype PKCS12
+keytool -list -keystore keycloak.keystore.p12 -storepass keycloak
 ```
 
 This sets up the keystore and certificates for Keycloak.
@@ -67,7 +61,7 @@ This sets up the keystore and certificates for Keycloak.
 
 -- https-certificate-key-file=keycloak.pem
 
--- https-trust-store-file=server.keystore
+-- https-trust-store-file=keycloak.keystore.p12
 ```
 
 ## Create the Docker Network
